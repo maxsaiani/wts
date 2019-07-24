@@ -1,0 +1,129 @@
+//*****************************************************************
+//  XLINK command file for the MSP430 IAR C/C++ Compiler
+//
+//  This is the XLINK command file for the MSP430F135
+//  microprocessor.
+//
+//  Copyright 1996-2006 IAR Systems. All rights reserved.
+//
+//  Usage:  xlink  your_file(s)  -f lnk430f135  cl430xxx
+//
+//  $Revision: 1.13 $
+//
+//*****************************************************************
+
+
+//*****************************************************************
+//  The following segments are defined in this linker command file:
+//
+//  Data read/write segments (RAM)
+//  ==============================
+//
+//  segment     address range   usage
+//  -------     -------------   --------------------------
+//  DATA16_I    0200-03FF       Initialized variables
+//  DATA16_Z    0200-03FF       Zero initialized variables
+//  DATA16_N    0200-03FF       Uninitialized variables
+//  CSTACK      0200-03FF       Run-time stack/auto variables
+//  HEAP        0200-03FF       The heap used by malloc and free
+//
+//
+//  Program and non-volatile segments (FLASH)
+//  =========================================
+//
+//  segment     address range   usage
+//  -------     -------------   --------------------------
+//  INFO        1000-10FF       Information memory
+
+//  Rearanged stuff to make re-flashing flash possible.
+//  start_of_origin 0xE000-0xEFFF
+//  start_of_destination 0xF000-0xFFDF
+//  CSTART      0xF000-0xFFDF
+//  this_code_first 0xF000-0xFFDF
+//  this_data_first 0xF000-0xFFDF
+
+//  Then the rest as "normal" (But in 1/2 the available space of a MPC430F133
+
+//  CSTART      F000-FFDF       cstartup program code
+//  CODE        F000-FFDF       Program code
+//  DATA16_C    F000-FFDF       Constant "const" variables AND String literals
+//  DATA16_ID   F000-FFDF       Initializers for DATA16_I
+//  DIFUNCT     F000-FFDF       Dynamic initialization vector used by C++
+//  CHECKSUM    F000-FFDF       The linker places the checksum byte(s) in this segment,
+//                              when the -J linker command line option is used.
+//
+//  INTVEC      FFE0-FFFF       Interrupt vectors
+//
+//  NOTE:
+//  It is not possible to pack the CSTART segment by using the XLINK -P option
+//  Special function registers and peripheral modules occupy addresses 0-01FFh
+//  Be sure to use end values for the defined addresses
+//*****************************************************************
+
+// -------------------------------------------------------------------
+// Stack size and heap size
+// -------------------------------------------------------------------
+
+// Uncomment for command line use
+//-D_STACK_SIZE=50
+//-D_HEAP_SIZE=50
+
+// -------------------------------------------------------------------
+// Define CPU
+// -------------------------------------------------------------------
+
+-cmsp430
+
+// -------------------------------------------------------------------
+// RAM memory
+// Note: Current memory use dictates a msp430f147 or better
+// -------------------------------------------------------------------
+
+-Z(DATA)DATA16_I,DATA16_Z,DATA16_N,HEAP+_HEAP_SIZE=0200-05FF
+-Z(DATA)CSTACK+_STACK_SIZE#
+
+// -------------------------------------------------------------------
+//  Information memory (FLASH)
+// -------------------------------------------------------------------
+
+-Z(CODE)INFO=1000-10FF
+-Z(CODE)INFOA=1080-10FF
+-Z(CODE)INFOB=1000-107F
+
+
+// -------------------------------------------------------------------
+// ROM memory (FLASH)
+// -------------------------------------------------------------------
+
+// We have duplicate copies of the code.
+-UC000-DFFF=E000-FFFF
+
+//-- Re-flashing function.
+-Z(CODE)start_of_origin=0xC000-0xEFDF
+
+//-- Copy of re-flashing function.
+//-Z(CODE)start_of_dest=0xE000-0xFFDF
+
+-Z(CODE)CSTART=E000-FFDF
+-Z(CODE)this_code_first=0xE000-0xFFDF
+-Z(CONST)this_data_first=0xE000-0xFFDF
+
+//-- Then the more usual stuff
+
+-Z(CODE)CODE=E000-FFDF
+
+
+// Constant data
+
+-Z(CONST)DATA16_C,DATA16_ID,DIFUNCT,CHECKSUM=E000-FFDF
+
+
+// Interrupt vectors
+
+-Z(CONST)INTVEC=FFE0-FFFD
+-Z(CONST)RESET=FFFE-FFFF
+
+
+// -------------------------------------------------------------------
+// End of File
+// -------------------------------------------------------------------
